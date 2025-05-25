@@ -1,6 +1,6 @@
 # Expresiones Regulares
 
-## Nom i cognoms
+## Marti Dominguez Rivero
 
 ## Tratamiento de ficheros de notas
 
@@ -245,6 +245,77 @@ resultado de la ejecución de los tests unitarios.
 Inserte a continuación los códigos fuente desarrollados en esta tarea, usando los
 comandos necesarios para que se realice el realce sintáctico en Python del mismo (no
 vale insertar una imagen o una captura de pantalla, debe hacerse en formato *markdown*).
+
+`alumno.py`:
+
+```py
+def leeAlumnos(ficAlum):
+    """
+    Lee un fichero de texto con los datos de los alumnos y devuelve un diccionario
+    en el que la clave es el nombre de cada alumno y su contenido el objeto Alumno
+    correspondiente.
+
+    >>> alumnos = leeAlumnos('alumnos.txt')
+    >>> for alumno in alumnos:
+    ...     print(alumnos[alumno])
+    ...
+    171     Blanca Agirrebarrenetse 9.5
+    23      Carles Balcells de Lara 4.9
+    68      David Garcia Fuster     7.0
+    """
+    alumnos = {}
+    patron = re.compile(r'^(\d+)\s+([\w\s]+)\s+([\d\s\t.]+)$')
+
+    with open(ficAlum, 'r', encoding='utf-8') as f:
+        for linea in f:
+            match = patron.match(linea.strip())
+            if match:
+                numIden = int(match.group(1))
+                nombre = match.group(2).strip()
+                notas = list(map(float, re.split(r'\s+', match.group(3).strip())))
+                alumnos[nombre] = Alumno(nombre, numIden, notas)
+
+    return alumnos
+```
+
+`horas.py`:
+
+```py
+def normalizaHoras(ficText, ficNorm):
+    """
+    Lee un fichero de texto, analiza las expresiones horarias y escribe un nuevo fichero
+    con las expresiones normalizadas en formato HH:MM.
+
+    Las expresiones incorrectas se dejan tal cual.
+
+    Ejemplo:
+    Entrada:
+        La llegada del tren está prevista a las 18:30
+        Tenía su clase entre las 8h y las 10h30m
+        Se acaba a las 4 y media de la tarde
+    Salida:
+        La llegada del tren está prevista a las 18:30
+        Tenía su clase entre las 08:00 y las 10:30
+        Se acaba a las 16:30
+    """
+    patrones = [
+        (re.compile(r'(\d{1,2}):(\d{2})'), lambda m: f'{int(m.group(1)):02}:{int(m.group(2)):02}'),
+        (re.compile(r'(\d{1,2})h(\d{1,2})m'), lambda m: f'{int(m.group(1)):02}:{int(m.group(2)):02}'),
+        (re.compile(r'(\d{1,2})h'), lambda m: f'{int(m.group(1)):02}:00'),
+        (re.compile(r'(\d{1,2}) y media de la tarde'), lambda m: f'{int(m.group(1)) + 12}:30'),
+        (re.compile(r'(\d{1,2}) y cuarto de la tarde'), lambda m: f'{int(m.group(1)) + 12}:15'),
+        (re.compile(r'(\d{1,2}) menos cuarto de la tarde'), lambda m: f'{int(m.group(1)) + 11}:45'),
+        (re.compile(r'(\d{1,2})h de la mañana'), lambda m: f'{int(m.group(1)):02}:00'),
+        (re.compile(r'12 de la noche'), lambda m: '00:00'),
+    ]
+
+    with open(ficText, 'r', encoding='utf-8') as entrada, open(ficNorm, 'w', encoding='utf-8') as salida:
+        for linea in entrada:
+            original = linea
+            for patron, reemplazo in patrones:
+                linea = patron.sub(reemplazo, linea)
+            salida.write(linea)
+```
 
 ##### Subida del resultado al repositorio GitHub y *pull-request*
 
